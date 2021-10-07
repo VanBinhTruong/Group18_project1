@@ -7,7 +7,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from kfold_cross_validation.kfold_cross_validation import kfold_cross_validation
-from utils.utils import split_train_test
+from utils.utils import split_train_test, accu_eval
 
 
 class DL_advance:
@@ -73,8 +73,8 @@ class DL_advance:
             Y_train_estimate = self.kfold.model.predict(X_train[:-1, :], W)
             Y_test_estimate = self.kfold.model.predict(X_test[:-1, :], W)
 
-            acc_train = self.kfold.model.Accu_eval(Y_train_estimate, Y_train)
-            acc_test = self.kfold.model.Accu_eval(Y_test_estimate, Y_test)
+            acc_train = accu_eval(Y_train_estimate, Y_train)
+            acc_test = accu_eval(Y_test_estimate, Y_test)
 
             # visualization delta
             Acc_train_vec.append(acc_train)

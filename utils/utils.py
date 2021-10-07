@@ -21,3 +21,21 @@ def split_train_test(X, Y, rate):
     Y_test = Y_per[:, temp + 1:]
 
     return X_train, X_test, Y_train, Y_test
+
+def accu_eval(Y_predict, Y_actual):
+    TP, TN, FP, FN = 0, 0, 0, 0
+    for i in range(len(Y_predict.T)):
+        if Y_predict[0, i] == 1 and Y_actual[0, i] == 1:
+            TP += 1
+        elif Y_predict[0, i] == 0 and Y_actual[0, i] == 0:
+            TN += 1
+        elif Y_predict[0, i] == 0 and Y_actual[0, i] == 1:
+            FN += 1
+        elif Y_predict[0, i] == 1 and Y_actual[0, i] == 0:
+            FP += 1
+        else:
+            raise ValueError('predict() error')
+
+    accuracy = (TP + TN) * 1.0 / (TP + TN + FP + FN)
+
+    return accuracy

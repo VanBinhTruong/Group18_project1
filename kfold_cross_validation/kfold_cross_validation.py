@@ -11,6 +11,7 @@ from training_model.lda_learning import LDA_Learning
 
 
 # In[3]:
+from utils.utils import accu_eval
 
 
 class kfold_cross_validation:
@@ -116,8 +117,8 @@ class kfold_cross_validation:
             Y_train_est = self.model.predict(X_train, W_trained)
             Y_valid_est = self.model.predict(X_valid, W_trained)
 
-            acc_train = self.model.Accu_eval(Y_train_est, Y_train)
-            acc_valid = self.model.Accu_eval(Y_valid_est, Y_valid)
+            acc_train = accu_eval(Y_train_est, Y_train)
+            acc_valid = accu_eval(Y_valid_est, Y_valid)
 
             accu_train.append(acc_train)
             accu_valid.append(acc_valid)
