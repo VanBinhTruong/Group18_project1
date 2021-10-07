@@ -6,19 +6,16 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from training_model.discriminative_learning import Discriminative_Learning
-
-
-# In[4]:
+from kfold_cross_validation.kfold_cross_validation import kfold_cross_validation
 
 
 class DL_advance:
     
-    def __init__(self, model_class):
-        self.model = model_class()
+    def __init__(self, kfold_class, model_class):
+        self.kfold = kfold_class(model_class)
 
 
-    def DL_init(self, model_info = {}):
+    def DL_init(self, kflod_info = {}, model_info = {}):
         '''
             Initiate value for parameters
             path_csv: is path to csv database file
@@ -26,7 +23,7 @@ class DL_advance:
             thresshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
-        self.model.init(model_info)
+        self.kfold.kflod_init(kflod_info, model_info)
         
     def fit_adv(self):
         '''
@@ -46,7 +43,7 @@ class DL_advance:
         # import base functions
         
         # load input file
-        data_table = self.model.load_input()
+        data_table = self.kfold.model.load_input()
         
         database = data_table.T
         
@@ -77,7 +74,7 @@ class DL_advance:
         
         # separate training set and validation set
         # take from index 0 to 80% of input X, Y as Training, otherwise for Validation
-        temp = int(self.model.rate * n) 
+        temp = int(self.kfold.model.rate * n) 
         X_train = X_per[:,0:temp+1]
         X_test = X_per[:, temp+1 : ]
         
@@ -95,16 +92,16 @@ class DL_advance:
         # iteration for training Weight
         for idx in range (4000):     
     
-            W = W + (1.0 / (idx+1)) * np.sum( X_train * (Y_train - self.model.sigmoid(W.T @ X_train)), axis = 1, keepdims = True)
+            W = W + (1.0 / (idx+1)) * np.sum( X_train * (Y_train - self.kfold.model.sigmoid(W.T @ X_train)), axis = 1, keepdims = True)
     
             # stop condition 
             # check Accuracy of Training sample and Validation Sample
             # make sure not become high Bias & Variation        
-            Y_train_est = self.model.predict(X_train[:-1,:], W)
-            Y_test_est = self.model.predict( X_test[:-1,:], W)
+            Y_train_est = self.kfold.model.predict(X_train[:-1,:], W)
+            Y_test_est = self.kfold.model.predict( X_test[:-1,:], W)
             
-            acc_train = self.model.Accu_eval( Y_train_est, Y_train)
-            acc_test = self.model.Accu_eval( Y_test_est, Y_test)
+            acc_train = self.kfold.model.Accu_eval( Y_train_est, Y_train)
+            acc_test = self.kfold.model.Accu_eval( Y_test_est, Y_test)
             
             # visualization delta
             Acc_train_vec.append(acc_train)
@@ -122,7 +119,7 @@ class DL_advance:
         plt.plot(x_lab, Acc_train_vec, color = 'r', label = 'training accuracy')
         plt.plot(x_lab, Acc_test_vec, color = 'b', label = 'test accuracy')
         plt.axvline(x =idx, color='g', linestyle='-')
-        plt.title('accuracy of database _{}'.format(self.model.path_csv))
+        plt.title('accuracy of database _{}'.format(self.kfold.model.file))
         plt.legend(loc = 'upper right')
         plt.legend()
         plt.show()
@@ -130,49 +127,6 @@ class DL_advance:
         return W_arr[idx,:,0], Acc_train_vec[idx], Acc_test_vec[idx]
           
             
-    def training_feature(self, X, Y):
-        '''
-            training model with input removed some feature 
-            It same with training_model() but take input instead of load from .csv file
-        '''
-        
-        #normalization for input feature
-        #feature had been normalized already
-        
-        m, n = np.shape(X) # no of feature, n is no of observation 
-        
-        
-        
-        # make permutation for database
-        seed = 0
-        np.random.seed(seed)
-        idx_per = np.random.permutation(n)
-        Y_per = Y[idx_per].reshape(1, n)
-        X_per = X[:, idx_per]  
-        
-        
-        # separate training set and validation set
-        # take from index 0 to 80% of input X, Y as Training, otherwise for Validation
-        temp = int(self.model.rate * n) 
-        X_train = X_per[:,0:temp+1]
-        X_test = X_per[:, temp+1 : ]
-        
-        Y_train = Y_per[:, 0:temp+1]
-        Y_test = Y_per[:, temp+1 : ]                
-        
-
-        # decleare hyperparameter
-        W = np.random.randn(m+1,1)
-        
-        # evaluate model
-        W_trained = self.model.fit(X_train, Y_train, self.model.learning_type, self.model.alpha, self.model.epsilon)
-        Y_train_est = self.model.predict(X_train, W_trained)
-        Y_test_est = self.model.predict( X_test, W_trained)
-            
-        acc_train = self.model.Accu_eval( Y_train_est, Y_train)
-        acc_test = self.model.Accu_eval( Y_test_est, Y_test)
-    
-        return acc_train, acc_test
 
     def remove_feature(self):
         '''
@@ -184,24 +138,39 @@ class DL_advance:
             do step 2 until all feature have been tested.
         '''
         # load input file
-        data_table = self.model.load_input()
+        data_table = self.kfold.model.load_input()
         
         database = data_table.T
         
         row, col = np.shape(database)
         
-        # training with only 1 feature
-        X = database[0, :].reshape(1, col)
+        # training with only 1 feature 
+        # greedy to choose the best one
         Y = database[row-1, :]
-        print(np.shape(X))
-        acc_train_prev, acc_test_prev = self.training_feature(X, Y)
+        acc_train_kfold = []
+        acc_test_kfold = []
+        for i in range(row-1):
+            X = database[i, :].reshape(1, col)
+
+            #print(np.shape(X))
+            acc_train_prev, acc_test_prev = self.kfold.kflod_data_calulate(X, Y)
+            acc_train_kfold.append(acc_train_prev)
+            acc_test_kfold.append(acc_test_prev)
         
-        idx_feature = [1]
-        for i in range(1, row-1):
+        best_feature = np.argmax(acc_test_kfold)
+        # select feature with the best accuracy of test
+        X = database[best_feature, :].reshape(1, col)
+        print('the best feature is at position: ', best_feature)
+        print(acc_test_kfold)
+        idx_feature = [best_feature+1]
+        for i in range(row-1):
+            if i == best_feature:
+                continue
+            
             New_fea = database[i, :].reshape(1, col)
             X_cur = np.concatenate((X, New_fea), axis = 0)
-            acc_train_cur, acc_test_cur = self.training_feature(X_cur, Y)
-            if (np.abs(acc_train_cur - acc_test_cur) < 0.05) and acc_test_cur > acc_test_prev:
+            acc_train_cur, acc_test_cur = self.kfold.kflod_data_calulate(X_cur, Y)
+            if (acc_test_cur >= acc_test_prev) | (acc_train_cur >= acc_train_prev):
                 acc_test_prev = acc_test_cur
                 acc_train_prev = acc_train_cur
                 X = X_cur
@@ -209,9 +178,9 @@ class DL_advance:
             else:
                 pass
             
-            # Save remaining feature to .csv file
-            #new_data = np.concatenate((X, Y.reshape(1, col)), axis = 0).T
-            #np.savetxt('new_feature.csv'.format(self.model.path_csv), new_data, delimiter=',')
+        # Save remaining feature to .csv file
+        new_data = np.concatenate((X, Y.reshape(1, col)), axis = 0).T
+        np.savetxt('{}/remove_new_{}'.format(self.kfold.model.path, self.kfold.model.file), new_data, delimiter=',')
             
         return acc_train_prev, acc_test_prev, idx_feature
 
@@ -223,7 +192,7 @@ class DL_advance:
             x1.x2, x1.x3, .. x1.xend will be check.
         '''
         # load input file
-        data_table = self.model.load_input()
+        data_table = self.kfold.model.load_input()
         
         database = data_table.T
         
@@ -247,10 +216,10 @@ class DL_advance:
         for i in range(0, row-1):
             New_fea = X_org[i-1, :].reshape(1, col) * X_org[i, :].reshape(1, col)
             X_cur = np.concatenate((X, New_fea), axis = 0)
-            acc_train_cur, acc_test_cur = self.training_feature(X_cur, Y)
+            acc_train_cur, acc_test_cur = self.kfold.kflod_data_calulate(X_cur, Y)
             
             # if new feature have good accuraccy, update X
-            if (np.abs(acc_train_cur - acc_test_cur) < 0.05) and acc_test_cur > acc_test_prev:
+            if (acc_test_cur >= acc_test_prev) | (acc_train_cur >= acc_train_prev):
                 acc_test_prev = acc_test_cur
                 acc_train_prev = acc_train_cur
                 X = X_cur
@@ -265,10 +234,10 @@ class DL_advance:
 
             New_fea = np.square(X_org[i-1, :].reshape(1, col))
             X_cur = np.concatenate((X, New_fea), axis = 0)
-            acc_train_cur, acc_test_cur = self.training_feature(X_cur, Y)
+            acc_train_cur, acc_test_cur = self.kfold.kflod_data_calulate(X_cur, Y)
             
             # if new feature have good accuraccy, update X
-            if (np.abs(acc_train_cur - acc_test_cur) < 0.05) and acc_test_cur > acc_test_prev:
+            if (acc_test_cur >= acc_test_prev + 0.01) | (acc_train_cur >= acc_train_prev + 0.01):
                 acc_test_prev = acc_test_cur
                 acc_train_prev = acc_train_cur
                 X = X_cur
@@ -279,8 +248,8 @@ class DL_advance:
                 pass
             
             #Save remaining feature to .csv file
-            #new_data = np.concatenate((X, Y.reshape(1, col)), axis = 0).T
-            #np.savetxt('add_new_feature{}.csv'.format(self.model.path_csv), new_data, delimiter=',')
+            new_data = np.concatenate((X, Y.reshape(1, col)), axis = 0).T
+            np.savetxt('{}/add_new_{}'.format(self.kfold.model.path, self.kfold.model.file), new_data, delimiter=',')
             
         return acc_train_vec, acc_test_vec, idx_feature
 

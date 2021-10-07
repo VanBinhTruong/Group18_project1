@@ -22,15 +22,18 @@ class kfold_cross_validation:
     def kflod_init(self, kfold_info = {}, model_info = {}):
         '''
             Initiate value for parameters
-            path_csv: is path to csv database file
+            path: is path to folder of .csv database file
             epsilon for stop condition, L2(Wk+1 - W)
             thresshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
         
         self.kfold = kfold_info.get('kflod', 10)
-        self.path_csv = kfold_info.get('path', 'database/red_wine.csv') 
+        self.path = kfold_info.get('path', 'database') 
+        self.file = kfold_info.get('file', 'red_wine.csv') 
         
+        model_info['path'] = self.path
+        model_info['file'] = self.file
         self.model.init(model_info)
 
     def kfold_load_data(self):
@@ -75,12 +78,13 @@ class kfold_cross_validation:
         Y_fold[str(self.kfold-1)] = Y_per[:, (i+1)*size_val :].reshape(1, n-(self.kfold-1)*size_val)
         
         return X_fold, Y_fold
-    
-    def kflod_validation(self):
+
+    def kflod_data_calulate(self, X, Y):
         '''
-            xxx
+            This function is take X, Y as input and run k fold cross validation
+            return: mean of accuracy of training and testing
         '''
-        X, Y = self.kfold_load_data()
+
         X_fold, Y_fold = self.kfold_data_separate(X, Y)
         m, n_fold = np.shape(X_fold['0'])
         
@@ -122,6 +126,18 @@ class kfold_cross_validation:
              
     
         return np.mean(ACCU_TRAIN), np.mean(ACCU_VALID)
+
+
+    def kflod_validation(self):
+        '''
+            This function is to run k fold cross validation
+            return: mean of accuracy of training and testing
+        '''
+        X, Y = self.kfold_load_data()
+
+        mean_acc_train, mean_acc_valid = self.kflod_data_calulate(X, Y)
+    
+        return mean_acc_train, mean_acc_valid
 
 
 

@@ -9,19 +9,25 @@ class Discriminative_Learning:
     def init(self, DL_info = {}):
         '''
             Initiate value for parameters
-            path_csv: is path to csv database file
+            path: is folder of .csv files
             epsilon for stop condition, L2(Wk+1 - W)
+            learning_type is 
+                type1: 1/(k+1)
+                type2: 1/2**t
+                type3: fixed by alpha = 0.x
             thresshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
-        self.path_csv = DL_info.get('path', 'database/red_wine.csv')
+        self.path = DL_info.get('path', 'database')
+        self.file = DL_info.get('file', 'red_wine.csv')
+
         self.epsilon = DL_info.get('epsilon', 0.05) 
         self.learning_type = DL_info.get('learning_type', 'type1')
         self.alpha = DL_info.get('alpha', 0.2)
         self.thresshold = DL_info.get('thresshold', 0.5)
         self.rate = DL_info.get('rate', 0.8)
-        self.name = DL_info.get('name', 'discriminative_learning')
-        
+        self.name = 'discriminative_learning'
+
 
     def load_input(self):
         '''
@@ -29,7 +35,8 @@ class Discriminative_Learning:
             EX: red_wine.csv, diabetes.csv
                 diabet = np.genfromtxt('diabetes.csv', delimiter=",")
         '''
-        trainig_data = np.genfromtxt(self.path_csv, delimiter=",")
+        path_csv = self.path + '/' + self.file
+        trainig_data = np.genfromtxt(path_csv, delimiter=",")
         
         return trainig_data
 
@@ -206,7 +213,7 @@ class Discriminative_Learning:
         X_test = X_per[:, temp+1 : ]
         
         Y_train = Y_per[:, 0:temp+1]
-        Y_test = Y_per[:, temp+1 : ]                
+        Y_test = Y_per[:, temp+1 : ]
         
 
         # decleare hyperparameter
@@ -225,13 +232,13 @@ class Discriminative_Learning:
     def comp_learning_rate(self):
 
 
-        self.init() # Initiate with default value
+        #self.init() # Initiate with default value
         
         # decleare hyperparameter
 
         #learning_type_vec = ['type1','type2','type3']
         learning_type_vec = ['type1','type2']
-        alpha_vec = [0.2, 0.6, 0.9]
+        alpha_vec = [0.2]
 
         
         acc_train_model = {}
@@ -304,6 +311,6 @@ class Discriminative_Learning:
         plt.grid()
         plt.xlabel('Thresshold')
         plt.ylabel('Accuracy')
-        plt.title('Changing of Accuracy follow Thresshold of {}'.format(self.path_csv))
+        plt.title('Changing of Accuracy follow Thresshold of {}'.format(self.path + '/' + self.file))
         plt.show()
     

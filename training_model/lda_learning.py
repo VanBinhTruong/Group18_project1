@@ -9,11 +9,12 @@ class LDA_Learning():
     def init(self, DL_info = {}):
         '''
             Initiate value for parameters
-            path_csv: is path to csv database file
+            path: is path to csv database file
             thresshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
-        self.path_csv = DL_info.get('path', 'database/red_wine.csv')
+        self.path = DL_info.get('path', 'database')
+        self.file = DL_info.get('file', 'red_wine.csv')
         self.thresshold = DL_info.get('thresshold', 0)
         self.rate = DL_info.get('rate', 0.8)
         self.name = 'lda_learning'
@@ -24,7 +25,8 @@ class LDA_Learning():
             EX: red_wine.csv, diabetes.csv
                 diabet = np.genfromtxt('diabetes.csv', delimiter=",")
         '''
-        trainig_data = np.genfromtxt(self.path_csv, delimiter=",")
+        path_csv = self.path + '/' + self.file
+        trainig_data = np.genfromtxt(path_csv, delimiter=",")
         
         return trainig_data
 
@@ -136,7 +138,7 @@ class LDA_Learning():
         # Convert to Y by compare with thresshold.
         # thresshold = 0 in this training
         # if >thresshold -> Y = 1, else Y = 0
-        Y_est = (log_odd_ratio >= self.thresshold) * 1.0         
+        Y_est = (log_odd_ratio >= self.thresshold) * 1.0
         
         return Y_est
 
