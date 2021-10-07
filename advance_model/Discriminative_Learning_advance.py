@@ -153,7 +153,7 @@ class DL_advance:
             X = database[i, :].reshape(1, col)
 
             #print(np.shape(X))
-            acc_train_prev, acc_test_prev = self.kfold.kflod_data_calulate(X, Y)
+            acc_train_prev, acc_test_prev = self.kfold.kfold_data_calculate(X, Y)
             acc_train_kfold.append(acc_train_prev)
             acc_test_kfold.append(acc_test_prev)
         
@@ -169,7 +169,7 @@ class DL_advance:
             
             New_fea = database[i, :].reshape(1, col)
             X_cur = np.concatenate((X, New_fea), axis = 0)
-            acc_train_cur, acc_test_cur = self.kfold.kflod_data_calulate(X_cur, Y)
+            acc_train_cur, acc_test_cur = self.kfold.kfold_data_calculate(X_cur, Y)
             if (acc_test_cur >= acc_test_prev) | (acc_train_cur >= acc_train_prev):
                 acc_test_prev = acc_test_cur
                 acc_train_prev = acc_train_cur
@@ -216,7 +216,7 @@ class DL_advance:
         for i in range(0, row-1):
             New_fea = X_org[i-1, :].reshape(1, col) * X_org[i, :].reshape(1, col)
             X_cur = np.concatenate((X, New_fea), axis = 0)
-            acc_train_cur, acc_test_cur = self.kfold.kflod_data_calulate(X_cur, Y)
+            acc_train_cur, acc_test_cur = self.kfold.kfold_data_calculate(X_cur, Y)
             
             # if new feature have good accuraccy, update X
             if (acc_test_cur >= acc_test_prev) | (acc_train_cur >= acc_train_prev):
@@ -234,7 +234,7 @@ class DL_advance:
 
             New_fea = np.square(X_org[i-1, :].reshape(1, col))
             X_cur = np.concatenate((X, New_fea), axis = 0)
-            acc_train_cur, acc_test_cur = self.kfold.kflod_data_calulate(X_cur, Y)
+            acc_train_cur, acc_test_cur = self.kfold.kfold_data_calculate(X_cur, Y)
             
             # if new feature have good accuraccy, update X
             if (acc_test_cur >= acc_test_prev + 0.01) | (acc_train_cur >= acc_train_prev + 0.01):
