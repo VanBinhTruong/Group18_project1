@@ -79,7 +79,7 @@ class kfold_cross_validation:
     def kfold_data_calculate(self, X, Y):
         '''
             Takes X, Y as inputs and runs k fold cross validation
-            returns the accuracy mean for training and testing sets
+            Returns the accuracy mean for training and testing sets
         '''
 
         X_fold, Y_fold = self.kfold_data_separate(X, Y)
