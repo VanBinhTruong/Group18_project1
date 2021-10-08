@@ -23,7 +23,7 @@ class DL_advance:
             threshold: threshold to convert from P(Y=1|X) to Y estimate
             rate: proportion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
-        self.kfold.kflod_init(kfold_info, model_info)
+        self.kfold.kfold_init(kfold_info, model_info)
 
     def fit_adv(self):
         '''
@@ -55,8 +55,8 @@ class DL_advance:
         X = X_1
 
         X_train, X_test, Y_train, Y_test = split_train_test(X, Y, self.kfold.model.rate)
-
-        W = np.random.randn(m, 1)
+        
+        W = np.random.randn(m+1, 1)
 
         W_vec = []
         Acc_test_vec = []
@@ -64,8 +64,7 @@ class DL_advance:
 
         # iteration for training Weight
         for idx in range(4000):
-            W = W + (1.0 / (idx + 1)) * np.sum(X_train * (Y_train - self.kfold.model.sigmoid(W.T @ X_train)), axis=1,
-                                               keepdims=True)
+            W = W + (1.0 / (idx + 1)) * np.sum(X_train * (Y_train - self.kfold.model.sigmoid(W.T @ X_train)), axis=1, keepdims=True)
 
             # stop condition 
             # check accuracy of training sample and validation Sample
@@ -85,7 +84,7 @@ class DL_advance:
         Acc_train_arr = np.array(Acc_train_vec)
         Acc_test_arr = np.array(Acc_test_vec)
         W_arr = np.array(W_vec)
-        idx = np.argmax(Acc_test_arr[np.abs(Acc_train_arr - Acc_test_arr) < 0.03])
+        idx = np.argmax(Acc_train_arr[np.abs(Acc_train_arr - Acc_test_arr) < 0.5])
 
         # plot figure of accuracy training/test
         x_lab = [x_lab for x_lab in range(len(Acc_train_vec))]

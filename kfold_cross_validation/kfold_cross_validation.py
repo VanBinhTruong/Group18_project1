@@ -19,7 +19,7 @@ class kfold_cross_validation:
     def __init__(self, model_class):
         self.model = model_class()
 
-    def kflod_init(self, kfold_info={}, model_info={}):
+    def kfold_init(self, kfold_info={}, model_info={}):
         '''
             Initiates values for parameters
             path: path to folder of .csv database file
@@ -28,7 +28,7 @@ class kfold_cross_validation:
             rate: proportion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
 
-        self.kfold = kfold_info.get('kflod', 10)
+        self.kfold = kfold_info.get('kfold', 10)
         self.path = kfold_info.get('path', 'database')
         self.file = kfold_info.get('file', 'red_wine.csv')
 
