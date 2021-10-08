@@ -151,30 +151,6 @@ class Discriminative_Learning:
         
         return Y_est
 
-    def Accu_eval(self, Y_est, Y_test):
-        '''
-            compare estimated Y and testing Y
-            return accuracy level
-        '''
-        
-        TP, TN, FP, FN = 0, 0, 0, 0
-        for i in range(len(Y_est.T)):
-            if Y_est[0,i] == 1 and Y_test[0,i] == 1 :
-                TP += 1
-            elif Y_est[0,i] == 0 and Y_test[0, i] == 0 :
-                TN += 1            
-            elif Y_est[0, i] == 0 and Y_test[0, i] == 1 :
-                FN += 1            
-            elif Y_est[0, i] == 1 and Y_test[0, i] == 0 :
-                FP += 1
-            else:
-                raise ValueError('predict() error') 
-        
-        Accuracy = (TP + TN) * 1.0 / (TP + TN + FP + FN)
-        
-        
-        return Accuracy
-
 
     def training_model(self):
         '''
