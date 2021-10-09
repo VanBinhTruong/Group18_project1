@@ -15,7 +15,7 @@ class Discriminative_Learning:
                 type1: 1/(k+1)
                 type2: 1/2**t
                 type3: fixed by alpha = 0.x
-            thresshold for convert from P(Y=1|X) to Y estimate
+            threshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
         self.path = DL_info.get('path', 'database')
@@ -24,11 +24,10 @@ class Discriminative_Learning:
         self.epsilon = DL_info.get('epsilon', 0.05) 
         self.learning_type = DL_info.get('learning_type', 'type1')
         self.alpha = DL_info.get('alpha', 0.2)
-        self.thresshold = DL_info.get('thresshold', 0.5)
+        self.threshold = DL_info.get('threshold', 0.5)
         self.rate = DL_info.get('rate', 0.8)
         self.name = 'discriminative_learning'
-
-
+        
     def load_input(self):
         '''
             path_csv is path of input.csv file
@@ -36,43 +35,10 @@ class Discriminative_Learning:
                 diabet = np.genfromtxt('diabetes.csv', delimiter=",")
         '''
         path_csv = self.path + '/' + self.file
-        trainig_data = np.genfromtxt(path_csv, delimiter=",")
+        training_data = np.genfromtxt(path_csv, delimiter=",")
         
-        return trainig_data
+        return training_data
 
-    def fig_histogram(self):
-        '''
-            This function take a database with shape of pandas
-            Return histogram figure for each feature of database (bar() and hist())
-        '''
-        database = self.load_input()
-        group0 = database[database[:, -1]==0] # group all observation with label = 0
-        group1 = database[database[:, -1]==1] # group all observation with label = 1
-        
-        x_lab = [x_lab for x_lab in range (np.shape(database)[0])]
-        for idx in range (np.shape(database)[1]-1):
-            fig = plt.figure(figsize=(10,10))
-            # histogram of both group0 and group1
-            ax = fig.add_subplot(311)
-            ax.hist(database[:,idx], bins=20, label="group0&1")
-            ax.legend(loc = 'upper right')
-            ax.legend()
-            ax.title.set_text('Feature_{} / Histogram of database'.format(idx+1))
-            
-            #histogram of each group
-            ax = fig.add_subplot(312)
-            ax.hist(group0[:,idx], bins=100, alpha=0.5, label="group0")
-            ax.hist(group1[:,idx], bins=100, alpha=0.5, label="group1")
-            ax.legend(loc = 'upper right')
-            ax.legend()
-            ax.title.set_text('Feature_{} / Histogram of Group0 and Group1'.format(idx+1))
-            
-            #plot of value of database
-            ax = fig.add_subplot(313)
-            ax.bar(x_lab, database[:,idx])
-            ax.title.set_text('Feature_{} / Each sample in database'.format(idx+1))
-            plt.show()
-        
     def sigmoid(self, x):
         return 1.0 / (1.0 + np.exp(-x))
 
@@ -145,9 +111,9 @@ class Discriminative_Learning:
         # calculate percentage of P(Y=1|X)
         PY_1 = self.sigmoid ( W_trained.T @ X_test )
         
-        # Convert to Y by compare with thresshold.
-        # if >thresshold -> Y = 1, else Y = 0
-        Y_est = (PY_1 >= self.thresshold) * 1.0         
+        # Convert to Y by compare with threshold.
+        # if >threshold -> Y = 1, else Y = 0
+        Y_est = (PY_1 >= self.threshold) * 1.0         
         
         return Y_est
 
@@ -182,7 +148,7 @@ class Discriminative_Learning:
             rate is percentage of training in database
         '''
         # load input file
-        data_table = self.load_input()
+        data_table = self.data.load_input()
         
         database = data_table.T
         
@@ -290,27 +256,27 @@ class Discriminative_Learning:
         return acc_train_model, acc_valid_model
     
 
-    def comp_thresshold(self):
+    def comp_threshold(self):
         '''
-            This function call training model with thresshold change inside [0, 1]
+            This function calls the training model with threshold change inside [0, 1]
         '''
         
         acc_train_thres = []
         acc_test_thres = []
-        thresshold_vec = np.linspace(0, 1, 30)
-        for thresshold in thresshold_vec:
-            self.thresshold = thresshold
+        threshold_vec = np.linspace(0, 1, 30)
+        for threshold in threshold_vec:
+            self.threshold = threshold
             acc_train, acc_test = self.training_model()
             acc_train_thres.append(acc_train)
             acc_test_thres.append(acc_test)
-        idx = [i for i in range(len(thresshold_vec))]
-        plt.plot(thresshold_vec, acc_train_thres, color = 'r', label = 'train')
-        plt.plot(thresshold_vec, acc_test_thres, color = 'b', label = 'test')
+        idx = [i for i in range(len(threshold_vec))]
+        plt.plot(threshold_vec, acc_train_thres, color = 'r', label = 'train')
+        plt.plot(threshold_vec, acc_test_thres, color = 'b', label = 'test')
         plt.legend(loc = 'upper right')
         plt.legend()
         plt.grid()
-        plt.xlabel('Thresshold')
+        plt.xlabel('Threshold')
         plt.ylabel('Accuracy')
-        plt.title('Changing of Accuracy follow Thresshold of {}'.format(self.path + '/' + self.file))
+        plt.title('Changing of Accuracy follow Threshold of {}'.format(self.path + '/' + self.file))
         plt.show()
     
