@@ -3,6 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import pandas as pd
+import seaborn as sns
 
 class Discriminative_Learning:
     
@@ -15,7 +17,7 @@ class Discriminative_Learning:
                 type1: 1/(k+1)
                 type2: 1/2**t
                 type3: fixed by alpha = 0.x
-            thresshold for convert from P(Y=1|X) to Y estimate
+            threshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
         self.path = DL_info.get('path', 'database')
@@ -24,7 +26,7 @@ class Discriminative_Learning:
         self.epsilon = DL_info.get('epsilon', 0.05) 
         self.learning_type = DL_info.get('learning_type', 'type1')
         self.alpha = DL_info.get('alpha', 0.2)
-        self.thresshold = DL_info.get('thresshold', 0.5)
+        self.threshold = DL_info.get('threshold', 0.5)
         self.rate = DL_info.get('rate', 0.8)
         self.name = 'discriminative_learning'
 
@@ -45,6 +47,7 @@ class Discriminative_Learning:
             This function take a database with shape of pandas
             Return histogram figure for each feature of database (bar() and hist())
         '''
+        
         database = self.load_input()
         group0 = database[database[:, -1]==0] # group all observation with label = 0
         group1 = database[database[:, -1]==1] # group all observation with label = 1
@@ -72,6 +75,12 @@ class Discriminative_Learning:
             ax.bar(x_lab, database[:,idx])
             ax.title.set_text('Feature_{} / Each sample in database'.format(idx+1))
             plt.show()
+        
+        # use pandas and seaborn to plot database
+        colnames=['feature{}'.format(i) for i in range(1, np.shape(database)[1])]
+        colnames.append('group')
+        df = pd.read_csv(self.path+'/'+self.file, names=colnames, header=None)
+        sns.pairplot(data=df, hue="group")
         
     def sigmoid(self, x):
         return 1.0 / (1.0 + np.exp(-x))
@@ -145,9 +154,9 @@ class Discriminative_Learning:
         # calculate percentage of P(Y=1|X)
         PY_1 = self.sigmoid ( W_trained.T @ X_test )
         
-        # Convert to Y by compare with thresshold.
-        # if >thresshold -> Y = 1, else Y = 0
-        Y_est = (PY_1 >= self.thresshold) * 1.0         
+        # Convert to Y by compare with threshold.
+        # if >threshold -> Y = 1, else Y = 0
+        Y_est = (PY_1 >= self.threshold) * 1.0         
         
         return Y_est
     
@@ -289,27 +298,27 @@ class Discriminative_Learning:
         return acc_train_model, acc_valid_model
     
 
-    def comp_thresshold(self):
+    def comp_threshold(self):
         '''
-            This function call training model with thresshold change inside [0, 1]
+            This function call training model with threshold change inside [0, 1]
         '''
         
         acc_train_thres = []
         acc_test_thres = []
-        thresshold_vec = np.linspace(0, 1, 30)
-        for thresshold in thresshold_vec:
-            self.thresshold = thresshold
+        threshold_vec = np.linspace(0, 1, 30)
+        for threshold in threshold_vec:
+            self.threshold = threshold
             acc_train, acc_test = self.training_model()
             acc_train_thres.append(acc_train)
             acc_test_thres.append(acc_test)
-        idx = [i for i in range(len(thresshold_vec))]
-        plt.plot(thresshold_vec, acc_train_thres, color = 'r', label = 'train')
-        plt.plot(thresshold_vec, acc_test_thres, color = 'b', label = 'test')
+        idx = [i for i in range(len(threshold_vec))]
+        plt.plot(threshold_vec, acc_train_thres, color = 'r', label = 'train')
+        plt.plot(threshold_vec, acc_test_thres, color = 'b', label = 'test')
         plt.legend(loc = 'upper right')
         plt.legend()
         plt.grid()
-        plt.xlabel('Thresshold')
+        plt.xlabel('Threshold')
         plt.ylabel('Accuracy')
-        plt.title('Changing of Accuracy follow Thresshold of {}'.format(self.path + '/' + self.file))
+        plt.title('Changing of Accuracy follow Threshold of {}'.format(self.path + '/' + self.file))
         plt.show()
     

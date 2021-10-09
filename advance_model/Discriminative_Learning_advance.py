@@ -84,14 +84,16 @@ class DL_advance:
         Acc_train_arr = np.array(Acc_train_vec)
         Acc_test_arr = np.array(Acc_test_vec)
         W_arr = np.array(W_vec)
-        idx = np.argmax(Acc_train_arr[np.abs(Acc_train_arr - Acc_test_arr) < 0.5])
+        idx = np.argmax(Acc_test_arr[np.abs(Acc_train_arr - Acc_test_arr) < 0.5] + Acc_train_arr[np.abs(Acc_train_arr - Acc_test_arr) < 0.5])
 
         # plot figure of accuracy training/test
         x_lab = [x_lab for x_lab in range(len(Acc_train_vec))]
         plt.plot(x_lab, Acc_train_vec, color='r', label='training accuracy')
         plt.plot(x_lab, Acc_test_vec, color='b', label='test accuracy')
         plt.axvline(x=idx, color='g', linestyle='-')
-        plt.title('Accuracy of Database _{}'.format(self.kfold.model.file))
+        plt.title('Accuracy of Database {}'.format(self.kfold.model.file))
+        plt.xlabel('Iteration of training')
+        plt.ylabel('Accuracy')
         plt.legend(loc='upper right')
         plt.legend()
         plt.show()
@@ -127,10 +129,14 @@ class DL_advance:
 
         # select feature with the best accuracy of test
         best_feature = np.argmax(acc_test_kfold)
-        print('The best feature is feature: ', best_feature, " with an accuracy of: ", acc_test_kfold)
+        print('The best feature is feature: ', best_feature+1, " with an accuracy of: ", acc_test_kfold[best_feature])
         idx_feature = [best_feature + 1]
         X = database[best_feature, :].reshape(1, col)
-
+        
+        acc_train_feature = []
+        acc_test_feature = []
+        acc_train_feature.append(acc_train_previous)
+        acc_test_feature.append(acc_test_previous)
         for i in range(row - 1):
             if i == best_feature:
                 continue
@@ -138,14 +144,28 @@ class DL_advance:
             new_feature = database[i, :].reshape(1, col)
             X_current = np.concatenate((X, new_feature), axis=0)
             acc_train_current, acc_test_current = self.kfold.kfold_data_calculate(X_current, Y)
+            
+
             if (acc_test_current >= acc_test_previous) | (acc_train_current >= acc_train_previous):
                 acc_test_previous = acc_test_current
                 acc_train_previous = acc_train_current
                 X = X_current
                 idx_feature.append(i + 1)
+                acc_train_feature.append(acc_train_previous)
+                acc_test_feature.append(acc_test_previous)
             else:
-                pass
-
+                acc_train_feature.append(acc_train_current)
+                acc_test_feature.append(acc_test_current)
+            
+        x_label = [j for j in range(1, len(acc_test_feature) + 1)]
+        plt.plot(x_label, acc_train_feature, color = 'r', label = 'train acc')
+        plt.plot(x_label, acc_test_feature, color = 'b', label = 'test acc')
+        plt.title('Accuracy of adding new feature {}'.format(self.kfold.model.file))
+        plt.xlabel('Feature number')
+        plt.ylabel('Accuracy')
+        plt.legend(loc='upper right')
+        plt.legend()
+        plt.show()
         # Save remaining feature to .csv file
         new_data = np.concatenate((X, Y.reshape(1, col)), axis=0).T
         np.savetxt('{}/remove_new_{}'.format(self.kfold.model.path, self.kfold.model.file), new_data, delimiter=',')
@@ -181,15 +201,16 @@ class DL_advance:
             new_feature = X_original[i - 1, :].reshape(1, col) * X_original[i, :].reshape(1, col)
             X_current = np.concatenate((X, new_feature), axis=0)
             acc_train_cur, acc_test_cur = self.kfold.kfold_data_calculate(X_current, Y)
-
+            
+            acc_train_vec.append(acc_train_cur)
+            acc_test_vec.append(acc_test_cur)
             # if the new feature has a better accuracy, update X
             if (acc_test_cur >= acc_test_prev) | (acc_train_cur >= acc_train_prev):
                 acc_test_prev = acc_test_cur
                 acc_train_prev = acc_train_cur
                 X = X_current
                 idx_feature.append([i - 1, i])
-                acc_train_vec.append(acc_train_prev)
-                acc_test_vec.append(acc_test_prev)
+
             else:
                 pass
 
@@ -200,19 +221,28 @@ class DL_advance:
             X_current = np.concatenate((X, new_feature), axis=0)
             acc_train_cur, acc_test_cur = self.kfold.kfold_data_calculate(X_current, Y)
 
+            acc_train_vec.append(acc_train_cur)
+            acc_test_vec.append(acc_test_cur)
             # if the new feature has a better accuracy, update X
-            if (acc_test_cur >= acc_test_prev + 0.01) | (acc_train_cur >= acc_train_prev + 0.01):
+            if (acc_test_cur >= acc_test_prev) | (acc_train_cur >= acc_train_prev):
                 acc_test_prev = acc_test_cur
                 acc_train_prev = acc_train_cur
                 X = X_current
                 idx_feature.append([i - 1, i - 1])
-                acc_train_vec.append(acc_train_prev)
-                acc_test_vec.append(acc_test_prev)
             else:
                 pass
 
-            # Save remaining feature to .csv file
-            new_data = np.concatenate((X, Y.reshape(1, col)), axis=0).T
-            np.savetxt('{}/add_new_{}'.format(self.kfold.model.path, self.kfold.model.file), new_data, delimiter=',')
+        x_label = [j for j in range(1, len(acc_train_vec) + 1)]
+        plt.plot(x_label, acc_train_vec, color = 'r', label = 'train acc')
+        plt.plot(x_label, acc_test_vec, color = 'b', label = 'test acc')
+        plt.title('Accuracy of adding second order feature {}'.format(self.kfold.model.file))
+        plt.xlabel('Feature number')
+        plt.ylabel('Accuracy')
+        plt.legend(loc='upper right')
+        plt.legend()
+        plt.show()
+        # Save remaining feature to .csv file
+        new_data = np.concatenate((X, Y.reshape(1, col)), axis=0).T
+        np.savetxt('{}/add_new_{}'.format(self.kfold.model.path, self.kfold.model.file), new_data, delimiter=',')
 
         return acc_train_vec, acc_test_vec, idx_feature

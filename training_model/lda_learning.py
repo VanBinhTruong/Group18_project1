@@ -10,12 +10,12 @@ class LDA_Learning():
         '''
             Initiate value for parameters
             path: is path to csv database file
-            thresshold for convert from P(Y=1|X) to Y estimate
+            threshold for convert from P(Y=1|X) to Y estimate
             rate is propotion of training in database. EX: rate = 0.8, training = 80%, test = 20%
         '''
         self.path = DL_info.get('path', 'database')
         self.file = DL_info.get('file', 'red_wine.csv')
-        self.thresshold = DL_info.get('thresshold', 0)
+        self.threshold = DL_info.get('threshold', 0)
         self.rate = DL_info.get('rate', 0.8)
         self.name = 'lda_learning'
     
@@ -135,10 +135,10 @@ class LDA_Learning():
         
         log_odd_ratio = W_trained.T @ X_test 
         
-        # Convert to Y by compare with thresshold.
-        # thresshold = 0 in this training
-        # if >thresshold -> Y = 1, else Y = 0
-        Y_est = (log_odd_ratio >= self.thresshold) * 1.0
+        # Convert to Y by compare with threshold.
+        # threshold = 0 in this training
+        # if >threshold -> Y = 1, else Y = 0
+        Y_est = (log_odd_ratio >= self.threshold) * 1.0
         
         return Y_est
 
